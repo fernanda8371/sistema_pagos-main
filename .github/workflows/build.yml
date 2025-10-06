@@ -1,45 +1,27 @@
-name: SonarQube
+name: Build
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch: {}   # ← botón “Run workflow” en Actions
+    branches:
+      - main
+
 
 jobs:
-  analyze:
-    runs-on: ubuntu-latest   # usa self-hosted si tu Sonar no es público
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-
-      # 🔎 Verifica que el runner alcanza tu servidor y que el token sirve
-      - name: Ping SonarQube API
-        run: |
-          set -e
-          echo "Ping ${{ secrets.SONAR_HOST_URL }}/api/server/version"
-          curl -sSf -u "${{ secrets.SONAR_TOKEN }}:" \
-            "${{ secrets.SONAR_HOST_URL }}/api/server/version" \
-            | tee /tmp/sonar_version.txt
-          echo "SonarQube version: $(cat /tmp/sonar_version.txt)"
-
-      # 🧪 Análisis mínimo (no requiere sonar-project.properties)
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v3
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=sistema-pagos-a00837146
-            -Dsonar.projectName=sistema-pagos-a00837146
-            -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/.git/** 
-            -Dsonar.verbose=true
-
-      # (Opcional) Falla el pipeline si el Quality Gate está en rojo
-      # - name: Quality Gate
-      #   uses: sonarsource/sonarqube-quality-gate-action@master
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # - uses: sonarsource/sonarqube-quality-gate-action@master
       #   timeout-minutes: 5
       #   env:
       #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
