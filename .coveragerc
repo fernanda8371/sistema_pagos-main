@@ -1,12 +1,18 @@
 
 [run]
 branch = True
-source = decision_engine
+source = .
 omit =
     tests/*
     .venv/*
     */site-packages/*
+    */venv/*
+    */__pycache__/*
+    */htmlcov/*
 
 [report]
 show_missing = True
 skip_covered = False
+
+[xml]
+output = coverage.xml
